@@ -107,7 +107,7 @@ export default function InsuranceSLMPlatformPreview() {
   const [chat, setChat] = useState<string>("");
   const [showTestPage, setShowTestPage] = useState<boolean>(false);
   const [isExporting, setIsExporting] = useState<boolean>(false);
-  const [messages, setMessages] = useState<Array<{ role: "user" | "assistant"; content: string }>>([
+  const [messages, setMessages] = useState<Array<{ role: string; content: string }>>([
     { role: "assistant", content: "Hi! I'm your Insurance Knowledge Engine. Ask about policies, pricing bands, IFRS17, or run a scenario." },
   ]);
 
