@@ -72,10 +72,11 @@ export const PDFExport: React.FC<PDFExportProps> = ({
       onClick={downloadPDF} 
       variant="outline" 
       size="sm"
-      className={`${className}`}
+      className={`text-xs lg:text-sm ${className}`}
     >
-      <Download className="w-4 h-4 mr-2" />
-      Export {sectionName} as PDF
+      <Download className="w-3 h-3 lg:w-4 lg:h-4 mr-1 lg:mr-2" />
+      <span className="hidden sm:inline">Export {sectionName} as PDF</span>
+      <span className="sm:hidden">Export PDF</span>
     </Button>
   );
 };

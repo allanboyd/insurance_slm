@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useRef } from "react";
+import React, { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import {
   Card,
@@ -18,6 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Progress } from "@/components/ui/progress";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Separator } from "@/components/ui/separator";
+import { Slider } from "@/components/ui/slider";
 import {
   Brain,
   LineChart as LineChartIcon,
@@ -39,6 +40,8 @@ import {
   Layers,
   Globe,
   Factory,
+  MessageSquare,
+  Phone,
 } from "lucide-react";
 import {
   LineChart,
@@ -53,9 +56,8 @@ import {
   BarChart,
   Bar,
 } from "recharts";
-import { PDFExport } from "@/components/PDFExport";
-import { SimplePDFTest } from "@/components/SimplePDFTest";
-import { SimpleCompletePDFExport } from "@/components/SimpleCompletePDFExport";
+import { AfricaMap } from "@/components/AfricaMap";
+import LandingPage from "./LandingPage";
 
 // --- Mock data (for charts & tables) ---
 const lossRatioData = [
@@ -82,260 +84,410 @@ const countryMarkers = [
 ];
 
 // Utility components
-const Kpi = ({ label, value, sub }: { label: string; value: string; sub?: string }) => (
-  <Card className="rounded-2xl shadow-sm">
-    <CardHeader className="pb-2">
-      <CardDescription className="text-muted-foreground">{label}</CardDescription>
-      <CardTitle className="text-3xl">{value}</CardTitle>
-      {sub && <div className="text-xs text-muted-foreground mt-1">{sub}</div>}
+const Kpi = ({ label, value, sub, color = "blue" }: { label: string; value: string; sub?: string; color?: string }) => {
+  const colorClasses = {
+    cyan: "bg-gradient-to-br from-cyan-50 to-cyan-100 border-cyan-200",
+    orange: "bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200",
+    teal: "bg-gradient-to-br from-teal-50 to-teal-100 border-teal-200",
+    blue: "bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200",
+    green: "bg-gradient-to-br from-emerald-50 to-emerald-100 border-emerald-200",
+    purple: "bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200",
+    red: "bg-gradient-to-br from-red-50 to-red-100 border-red-200",
+    indigo: "bg-gradient-to-br from-indigo-50 to-indigo-100 border-indigo-200"
+  };
+  
+  return (
+    <Card className={`rounded-2xl shadow-lg border-2 ${colorClasses[color as keyof typeof colorClasses] || colorClasses.cyan} hover:shadow-xl transition-all duration-300`}>
+      <CardHeader className="pb-2">
+        <CardDescription className="text-gray-600 font-medium">{label}</CardDescription>
+        <CardTitle className="text-3xl font-bold text-gray-800">{value}</CardTitle>
+        {sub && <div className="text-xs text-gray-500 mt-1 font-medium">{sub}</div>}
     </CardHeader>
   </Card>
 );
+};
 
-const SectionHeader = ({ icon: Icon, title, desc }: { icon: any; title: string; desc?: string }) => (
-  <div className="flex items-start gap-3 mb-4">
-    <div className="p-2 rounded-xl bg-muted"><Icon className="w-5 h-5" /></div>
-    <div>
-      <h3 className="text-xl font-semibold">{title}</h3>
-      {desc && <p className="text-sm text-muted-foreground mt-1">{desc}</p>}
+const SectionHeader = ({ icon: Icon, title, desc, color = "blue" }: { icon: any; title: string; desc?: string; color?: string }) => {
+  const colorClasses = {
+    cyan: "bg-gradient-to-br from-cyan-500 to-cyan-600 text-white",
+    orange: "bg-gradient-to-br from-orange-500 to-orange-600 text-white",
+    teal: "bg-gradient-to-br from-teal-500 to-teal-600 text-white",
+    blue: "bg-gradient-to-br from-blue-500 to-blue-600 text-white",
+    green: "bg-gradient-to-br from-emerald-500 to-emerald-600 text-white",
+    purple: "bg-gradient-to-br from-purple-500 to-purple-600 text-white",
+    red: "bg-gradient-to-br from-red-500 to-red-600 text-white",
+    indigo: "bg-gradient-to-br from-indigo-500 to-indigo-600 text-white",
+    rose: "bg-gradient-to-br from-rose-500 to-rose-600 text-white"
+  };
+  
+  return (
+    <div className="flex items-start gap-4 mb-6">
+      <div className={`p-3 rounded-2xl shadow-lg ${colorClasses[color as keyof typeof colorClasses] || colorClasses.cyan}`}>
+        <Icon className="w-6 h-6" />
+      </div>
+      <div>
+        <h3 className="text-2xl font-bold text-gray-800">{title}</h3>
+        {desc && <p className="text-sm text-gray-600 mt-1 font-medium">{desc}</p>}
     </div>
   </div>
 );
+};
 
 // --- Main Preview Component ---
 export default function InsuranceSLMPlatformPreview() {
+  const [showDashboard, setShowDashboard] = useState<boolean>(false);
   const [chat, setChat] = useState<string>("");
-  const [showTestPage, setShowTestPage] = useState<boolean>(false);
-  const [isExporting, setIsExporting] = useState<boolean>(false);
-  const [messages, setMessages] = useState<Array<{ role: string; content: string }>>([
+  const [messages, setMessages] = useState<Array<{ role: "user" | "assistant"; content: string }>>([
     { role: "assistant", content: "Hi! I'm your Insurance Knowledge Engine. Ask about policies, pricing bands, IFRS17, or run a scenario." },
   ]);
 
-  // Refs for PDF export
-  const dashboardRef = useRef<HTMLDivElement>(null);
-  const knowledgeRef = useRef<HTMLDivElement>(null);
-  const whatifRef = useRef<HTMLDivElement>(null);
-  const pricingRef = useRef<HTMLDivElement>(null);
-  const canvasRef = useRef<HTMLDivElement>(null);
-  const dataRef = useRef<HTMLDivElement>(null);
-  const governanceRef = useRef<HTMLDivElement>(null);
-
-  const sectionRefs = [
-    { name: "Dashboard", ref: dashboardRef },
-    { name: "Knowledge Engine", ref: knowledgeRef },
-    { name: "What-If Room", ref: whatifRef },
-    { name: "Pricing & Actuarial", ref: pricingRef },
-    { name: "Product Canvas", ref: canvasRef },
-    { name: "Data & Signals", ref: dataRef },
-    { name: "Governance", ref: governanceRef },
-  ];
-
   const handleSend = () => {
     if (!chat.trim()) return;
-    const next = [...messages, { role: "user", content: chat }];
+    const next: Array<{ role: "user" | "assistant"; content: string }> = [...messages, { role: "user", content: chat }];
     // Mock assistant echo
     next.push({ role: "assistant", content: `Working on: ${chat}. (This is a mock response with citations and links to internal docs.)` });
     setMessages(next);
     setChat("");
   };
 
-  if (showTestPage) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 p-6">
-        <div className="max-w-4xl mx-auto">
-          <div className="flex items-center justify-between mb-6">
-            <h1 className="text-3xl font-bold">PDF Export Test Page</h1>
-            <Button onClick={() => setShowTestPage(false)} variant="outline">
-              Back to App
-            </Button>
-          </div>
-          <p className="text-center text-muted-foreground mb-8">
-            This page tests the PDF export functionality. Try the test button below.
-          </p>
-          <SimplePDFTest />
-        </div>
-      </div>
-    );
+  const handleEnterDashboard = () => {
+    setShowDashboard(true);
+  };
+
+  if (!showDashboard) {
+    return <LandingPage onEnterDashboard={handleEnterDashboard} />;
   }
 
   return (
-    <TooltipProvider>
-      <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-teal-50 to-orange-50">
         {/* Header */}
-        <motion.header initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="mb-6">
+      <motion.header initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="bg-white/80 backdrop-blur-sm border-b border-gray-200/50 shadow-lg">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-2xl bg-primary/10"><Brain className="w-6 h-6" /></div>
+            <div className="flex items-center gap-4">
+              <div className="p-3 rounded-2xl bg-gradient-to-br from-cyan-500 to-teal-600 shadow-lg">
+                <Brain className="w-8 h-8 text-white" />
+              </div>
               <div>
-                <h1 className="text-2xl font-bold">Insurance SLM Platform</h1>
-                <p className="text-sm text-muted-foreground">Knowledge Engine • Simulation • Dynamic Pricing • Product Canvas • Governance</p>
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-cyan-600 to-teal-600 bg-clip-text text-transparent">
+                  Insurance SLM Platform
+                </h1>
+                <p className="text-gray-600 font-medium">AI-Powered Insurance Intelligence</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <Badge variant="secondary" className="rounded-full">Pilot: KE • UG • ZM • ZW</Badge>
-              <Button size="sm" variant="outline" onClick={() => setShowTestPage(!showTestPage)}>
-                {showTestPage ? 'Back to App' : 'Test PDF'}
+              <Badge className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-4 py-2 text-sm font-semibold shadow-lg">
+                Live Analysis
+              </Badge>
+              <Button 
+                onClick={() => setShowDashboard(false)}
+                variant="outline"
+                className="border-2 border-cyan-500 text-cyan-600 hover:bg-cyan-50 px-4 py-2"
+              >
+                Back to Home
               </Button>
-              <SimpleCompletePDFExport />
-              <Button size="sm" variant="outline"><Settings className="w-4 h-4 mr-2"/> Admin</Button>
             </div>
           </div>
-        </motion.header>
+        </div>
+      </motion.header>
 
-        <Tabs defaultValue="dashboard" className="">
-          <TabsList className="grid grid-cols-7 w-full mb-4">
-            <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-            <TabsTrigger value="knowledge">Knowledge Engine</TabsTrigger>
-            <TabsTrigger value="whatif">What‑If Room</TabsTrigger>
-            <TabsTrigger value="pricing">Pricing & Actuarial</TabsTrigger>
-            <TabsTrigger value="canvas">Product Canvas</TabsTrigger>
-            <TabsTrigger value="data">Data & Signals</TabsTrigger>
-            <TabsTrigger value="governance">Governance</TabsTrigger>
-          </TabsList>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <Tabs defaultValue="dashboard" className="">
+            <TabsList className="grid grid-cols-8 w-full mb-8 bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-2xl p-1 shadow-lg">
+              <TabsTrigger value="dashboard" className="rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-teal-600 data-[state=active]:text-white data-[state=active]:shadow-md">Dashboard</TabsTrigger>
+              <TabsTrigger value="knowledge" className="rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-orange-600 data-[state=active]:text-white data-[state=active]:shadow-md">Knowledge Engine</TabsTrigger>
+              <TabsTrigger value="simulator" className="rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-teal-500 data-[state=active]:to-cyan-600 data-[state=active]:text-white data-[state=active]:shadow-md">Customer Simulator</TabsTrigger>
+              <TabsTrigger value="whatif" className="rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-orange-600 data-[state=active]:text-white data-[state=active]:shadow-md">What‑If Room</TabsTrigger>
+              <TabsTrigger value="pricing" className="rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-teal-600 data-[state=active]:text-white data-[state=active]:shadow-md">Pricing & Actuarial</TabsTrigger>
+              <TabsTrigger value="canvas" className="rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-teal-500 data-[state=active]:to-cyan-600 data-[state=active]:text-white data-[state=active]:shadow-md">Product Canvas</TabsTrigger>
+              <TabsTrigger value="data" className="rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-orange-600 data-[state=active]:text-white data-[state=active]:shadow-md">Data & Signals</TabsTrigger>
+              <TabsTrigger value="governance" className="rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-teal-600 data-[state=active]:text-white data-[state=active]:shadow-md">Governance</TabsTrigger>
+            </TabsList>
 
-          {/* --- DASHBOARD --- */}
-          <TabsContent value="dashboard">
-            <div ref={dashboardRef}>
-            <div className="grid xl:grid-cols-4 md:grid-cols-2 gap-4 mb-4">
-              <Kpi label="Loss Ratio (base)" value="58%" sub="Trailing 6‑mo weighted" />
-              <Kpi label="Loss Ratio (stressed)" value="70%" sub="Flood + FX shock" />
-              <Kpi label="Fraud Flags (30d)" value="+14.8%" sub="Anomaly model v0.9" />
-              <Kpi label="Time to Quote" value="< 90s" sub="Dynamic pricing API" />
+            {/* --- DASHBOARD --- */}
+            <TabsContent value="dashboard">
+              <div className="grid xl:grid-cols-4 md:grid-cols-2 gap-6 mb-8">
+            <Kpi label="Loss Ratio (base)" value="58%" sub="Trailing 6‑mo weighted" color="cyan" />
+            <Kpi label="Loss Ratio (stressed)" value="70%" sub="Flood + FX shock" color="orange" />
+            <Kpi label="Fraud Flags (30d)" value="+14.8%" sub="Anomaly model v0.9" color="teal" />
+            <Kpi label="Time to Quote" value="< 90s" sub="Dynamic pricing API" color="orange" />
             </div>
 
-            <div className="grid lg:grid-cols-3 gap-4">
-              <Card className="lg:col-span-2 rounded-2xl shadow-sm">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2"><LineChartIcon className="w-5 h-5"/> Portfolio Loss Ratios</CardTitle>
-                  <CardDescription>Base vs. stressed (Monte Carlo 10k paths)</CardDescription>
+          <div className="grid lg:grid-cols-2 gap-6">
+            <Card className="rounded-3xl shadow-xl border-0 bg-white/80 backdrop-blur-sm">
+              <CardHeader className="pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 text-white">
+                    <LineChartIcon className="w-6 h-6"/>
+                  </div>
+                  <div>
+                    <CardTitle className="text-xl font-bold text-slate-800">Portfolio Loss Ratios</CardTitle>
+                    <CardDescription className="text-slate-600 font-medium">Base vs. stressed (Monte Carlo 10k paths)</CardDescription>
+                  </div>
+                </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="h-64">
+                <div className="h-72">
                     <ResponsiveContainer width="100%" height="100%">
                       <AreaChart data={lossRatioData}>
                         <defs>
                           <linearGradient id="base" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="currentColor" stopOpacity={0.25}/>
-                            <stop offset="95%" stopColor="currentColor" stopOpacity={0}/>
+                          <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
+                          <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                        </linearGradient>
+                        <linearGradient id="stressed" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3}/>
+                          <stop offset="95%" stopColor="#ef4444" stopOpacity={0}/>
                           </linearGradient>
                         </defs>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="month" />
-                        <YAxis tickFormatter={(v)=>`${Math.round(v*100)}%`} />
-                        <ReTooltip formatter={(v)=>typeof v==="number"?`${Math.round(v*100)}%`:v} />
-                        <Area type="monotone" dataKey="base" stroke="currentColor" fillOpacity={1} fill="url(#base)" />
-                        <Line type="monotone" dataKey="stressed" stroke="currentColor" strokeDasharray="4 4" />
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                      <XAxis dataKey="month" stroke="#64748b" />
+                      <YAxis tickFormatter={(v)=>`${Math.round(v*100)}%`} stroke="#64748b" />
+                      <ReTooltip 
+                        formatter={(v)=>typeof v==="number"?`${Math.round(v*100)}%`:v}
+                        contentStyle={{
+                          backgroundColor: 'white',
+                          border: '1px solid #e2e8f0',
+                          borderRadius: '12px',
+                          boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)'
+                        }}
+                      />
+                      <Area type="monotone" dataKey="base" stroke="#3b82f6" strokeWidth={3} fillOpacity={1} fill="url(#base)" />
+                      <Line type="monotone" dataKey="stressed" stroke="#ef4444" strokeWidth={3} strokeDasharray="5 5" />
                       </AreaChart>
                     </ResponsiveContainer>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="rounded-2xl shadow-sm">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2"><TrendingUp className="w-5 h-5"/> Country Markers</CardTitle>
-                  <CardDescription>Macro & climate drivers</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {countryMarkers.map((c)=> (
-                      <div key={c.code} className="p-3 rounded-xl border flex items-center justify-between">
-                        <div>
-                          <div className="font-medium">{c.name}</div>
-                          <div className="text-xs text-muted-foreground">Inflation {(c.inflation*100).toFixed(1)}% • FX stress {(c.fxStress*100).toFixed(0)}% • {c.climate}</div>
+            <Card className="rounded-3xl shadow-xl border-0 bg-white/80 backdrop-blur-sm">
+              <CardHeader className="pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white">
+                    <TrendingUp className="w-6 h-6"/>
                         </div>
-                        <Badge variant="outline">{c.code}</Badge>
+                  <div>
+                    <CardTitle className="text-xl font-bold text-slate-800">Africa Risk Map</CardTitle>
+                    <CardDescription className="text-slate-600 font-medium">Interactive country risk visualization</CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="h-72 bg-gradient-to-br from-slate-50 to-blue-50 rounded-2xl border-2 border-slate-200 p-4">
+                  <AfricaMap />
                       </div>
-                    ))}
+                <div className="mt-4 text-center">
+                  <p className="text-xs text-slate-600 font-medium">
+                    Click on markers to view detailed risk metrics and climate indicators
+                  </p>
                   </div>
                 </CardContent>
               </Card>
-            </div>
-            <div className="mt-4 flex justify-end">
-              <PDFExport sectionName="Dashboard" contentRef={dashboardRef} />
-            </div>
             </div>
           </TabsContent>
 
           {/* --- KNOWLEDGE ENGINE --- */}
           <TabsContent value="knowledge">
-            <div ref={knowledgeRef}>
-            <div className="grid lg:grid-cols-3 gap-4">
-              <Card className="lg:col-span-2 rounded-2xl shadow-sm">
+          <div className="grid lg:grid-cols-3 gap-6">
+            <Card className="lg:col-span-2 rounded-3xl shadow-xl border-0 bg-white/80 backdrop-blur-sm">
                 <CardHeader>
-                  <SectionHeader icon={BookOpen} title="Chat – Insurance Knowledge Engine" desc="Cited Q&A across policies, regulation, actuarial notes & market research" />
+                <SectionHeader icon={BookOpen} title="Chat – Insurance Knowledge Engine" desc="Cited Q&A across policies, regulation, actuarial notes & market research" color="green" />
                 </CardHeader>
                 <CardContent>
-                  <div className="h-72 overflow-auto rounded-xl border p-3 bg-muted/30 space-y-3">
+                <div className="h-80 overflow-auto rounded-2xl border-2 border-slate-200 p-4 bg-gradient-to-br from-slate-50 to-blue-50 space-y-4">
                     {messages.map((m, i)=> (
-                      <div key={i} className={`max-w-[85%] rounded-2xl px-3 py-2 ${m.role==='user' ? 'ml-auto bg-primary text-primary-foreground' : 'bg-background border'}`}>
-                        <p className="text-sm leading-relaxed">{m.content}</p>
+                    <div key={i} className={`max-w-[85%] rounded-2xl px-4 py-3 ${
+                      m.role==='user' 
+                        ? 'ml-auto bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg' 
+                        : 'bg-white border-2 border-slate-200 shadow-md'
+                    }`}>
+                      <p className="text-sm leading-relaxed font-medium">{m.content}</p>
                       </div>
                     ))}
                   </div>
-                  <div className="flex items-center gap-2 mt-3">
-                    <Input placeholder="Ask about IFRS17 reserve risk, or 'Compare motor vs health LR in KE'" value={chat} onChange={(e)=>setChat(e.target.value)} />
-                    <Button onClick={handleSend}><Send className="w-4 h-4 mr-2"/>Ask</Button>
-                  </div>
-                  <div className="text-xs text-muted-foreground mt-2">Sources: IRA circulars • IPEC bulletins • PIA Zambia • IRA Uganda • Actuarial journals • Internal policy docs</div>
-                </CardContent>
-              </Card>
+                <div className="flex items-center gap-3 mt-4">
+                    <Input 
+                    placeholder="Ask about IFRS17 reserve risk, or 'Compare motor vs health LR in KE'" 
+                      value={chat} 
+                      onChange={(e)=>setChat(e.target.value)} 
+                    className="rounded-xl border-2 border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                  />
+                  <Button 
+                    onClick={handleSend}
+                    className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white border-0 rounded-xl px-6 shadow-lg"
+                  >
+                    <Send className="w-4 h-4 mr-2"/>Ask
+                  </Button>
+                </div>
+                <div className="text-xs text-slate-600 mt-3 font-medium bg-slate-100 rounded-lg p-3">
+                  Sources: IRA circulars • IPEC bulletins • PIA Zambia • IRA Uganda • Actuarial journals • Internal policy docs
+                </div>
+              </CardContent>
+            </Card>
 
-              <Card className="rounded-2xl shadow-sm">
-                <CardHeader>
-                  <SectionHeader icon={Globe} title="Crawler & Feeds" desc="Schedule regulatory & market crawls" />
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex items-center justify-between p-3 rounded-xl border">
+            <Card className="rounded-3xl shadow-xl border-0 bg-white/80 backdrop-blur-sm">
+              <CardHeader>
+                <SectionHeader icon={Globe} title="Crawler & Feeds" desc="Schedule regulatory & market crawls" color="indigo" />
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {[
+                  { name: "IRA Kenya – Circulars", desc: "Weekly • Diff-based ingestion • Auto-citation", active: true, color: "blue" },
+                  { name: "IPEC Zimbabwe – Bulletins", desc: "Weekly", active: true, color: "green" },
+                  { name: "PIA Zambia – Notices", desc: "Bi‑weekly", active: false, color: "orange" },
+                  { name: "IRA Uganda – Guidelines", desc: "Weekly", active: true, color: "purple" }
+                ].map((feed, index) => (
+                  <div key={index} className="flex items-center justify-between p-4 rounded-2xl bg-gradient-to-r from-slate-50 to-slate-100 border-2 border-slate-200 hover:shadow-md transition-all duration-300">
                     <div>
-                      <div className="font-medium">IRA Kenya – Circulars</div>
-                      <div className="text-xs text-muted-foreground">Weekly • Diff-based ingestion • Auto-citation</div>
+                      <div className="font-bold text-slate-800">{feed.name}</div>
+                      <div className="text-xs text-slate-600 font-medium">{feed.desc}</div>
                     </div>
-                    <Switch defaultChecked />
+                    <Switch 
+                      defaultChecked={feed.active}
+                      className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-emerald-500 data-[state=checked]:to-teal-500"
+                    />
                   </div>
-                  <div className="flex items-center justify-between p-3 rounded-xl border">
-                    <div>
-                      <div className="font-medium">IPEC Zimbabwe – Bulletins</div>
-                      <div className="text-xs text-muted-foreground">Weekly</div>
-                    </div>
-                    <Switch defaultChecked />
-                  </div>
-                  <div className="flex items-center justify-between p-3 rounded-xl border">
-                    <div>
-                      <div className="font-medium">PIA Zambia – Notices</div>
-                      <div className="text-xs text-muted-foreground">Bi‑weekly</div>
-                    </div>
-                    <Switch />
-                  </div>
-                  <div className="flex items-center justify-between p-3 rounded-xl border">
-                    <div>
-                      <div className="font-medium">IRA Uganda – Guidelines</div>
-                      <div className="text-xs text-muted-foreground">Weekly</div>
-                    </div>
-                    <Switch defaultChecked />
-                  </div>
+                ))}
                 </CardContent>
               </Card>
+          </div>
+        </TabsContent>
+
+        {/* --- CUSTOMER SIMULATOR --- */}
+        <TabsContent value="simulator">
+          <Card className="rounded-3xl shadow-xl border-0 bg-white/80 backdrop-blur-sm">
+                <CardHeader>
+              <SectionHeader icon={MessageSquare} title="Customer Insurance Simulator" desc="White‑label widget for quotes, education & lead capture — insurers can customize products, rules & branding" color="orange" />
+                </CardHeader>
+            <CardContent>
+              <div className="grid md:grid-cols-3 gap-8">
+                <div className="space-y-6">
+                  <div className="space-y-2">
+                    <Label className="text-sm font-bold text-slate-700">Coverage Type</Label>
+                    <Select defaultValue="motor">
+                      <SelectTrigger className="rounded-xl border-2 border-slate-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-200">
+                        <SelectValue placeholder="Choose coverage"/>
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="motor">Motor</SelectItem>
+                        <SelectItem value="health">Health</SelectItem>
+                        <SelectItem value="property">Property</SelectItem>
+                        <SelectItem value="crop">Parametric Crop</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-sm font-bold text-slate-700">Location</Label>
+                    <Select defaultValue="KE">
+                      <SelectTrigger className="rounded-xl border-2 border-slate-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-200">
+                        <SelectValue placeholder="Country"/>
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="KE">Kenya</SelectItem>
+                        <SelectItem value="UG">Uganda</SelectItem>
+                        <SelectItem value="ZM">Zambia</SelectItem>
+                        <SelectItem value="ZW">Zimbabwe</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-sm font-bold text-slate-700">Household Size</Label>
+                    <Input 
+                      defaultValue={3} 
+                      type="number" 
+                      className="rounded-xl border-2 border-slate-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-200"
+                    />
+                    </div>
+
+                  <div className="space-y-3">
+                    <Label className="text-sm font-bold text-slate-700">Deductible</Label>
+                    <Slider 
+                      defaultValue={[200]} 
+                      max={2000} 
+                      step={50}
+                      className="w-full"
+                    />
+                    <div className="text-xs text-slate-600 font-medium">KES 200 - 2,000</div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <Label className="text-sm font-bold text-slate-700">Coverage Limit (KES '000)</Label>
+                    <Slider 
+                      defaultValue={[800]} 
+                      max={5000} 
+                      step={100}
+                      className="w-full"
+                    />
+                    <div className="text-xs text-slate-600 font-medium">KES 800K - 5M</div>
+                    </div>
+
+                  <div className="text-xs text-slate-600 bg-orange-50 rounded-lg p-3 border border-orange-200">
+                    By continuing you agree to data & privacy terms. Your info may be shared with the selected insurer for quoting.
+                  </div>
+                    </div>
+
+                <div className="md:col-span-2">
+                  <div className="grid grid-cols-2 gap-4 mb-6">
+                    <Kpi label="Estimated Monthly Premium" value="KES 7,900" sub="Based on inputs & markers" color="green" />
+                    <Kpi label="Risk Score" value="Low‑Moderate" sub="Transparent factors shown below" color="blue" />
+                  </div>
+                  <div className="h-72 bg-white rounded-2xl border-2 border-slate-200 p-4">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={pricingBands}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                        <XAxis dataKey="tier" stroke="#64748b" />
+                        <YAxis stroke="#64748b" />
+                        <ReTooltip 
+                          contentStyle={{
+                            backgroundColor: 'white',
+                            border: '1px solid #e2e8f0',
+                            borderRadius: '12px',
+                            boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)'
+                          }}
+                        />
+                        <Line type="monotone" dataKey="premium" stroke="#f97316" strokeWidth={4} />
+                      </LineChart>
+                    </ResponsiveContainer>
+                    </div>
+                  <div className="mt-6 flex flex-wrap gap-3">
+                    <Button className="bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white border-0 rounded-xl px-6 shadow-lg">
+                      <Send className="w-4 h-4 mr-2"/> Get Quote
+                    </Button>
+                    <Button variant="outline" className="border-2 border-slate-300 hover:border-orange-500 hover:bg-orange-50 rounded-xl px-6">
+                      <MessageSquare className="w-4 h-4 mr-2"/> Chat with Advisor
+                    </Button>
+                    <Button variant="outline" className="border-2 border-slate-300 hover:border-green-500 hover:bg-green-50 rounded-xl px-6">
+                      <Phone className="w-4 h-4 mr-2"/> Continue in WhatsApp
+                    </Button>
+                    <Button variant="ghost" className="text-slate-600 hover:text-orange-600 rounded-xl px-6">
+                      Share Scenario Link
+                    </Button>
+                  </div>
+                  <div className="text-xs text-slate-600 mt-4 bg-slate-100 rounded-lg p-3">
+                    White‑label: theming, product rules, rating factors, and CTAs (quote/bind) are fully configurable per insurer/partner.
             </div>
-            <div className="mt-4 flex justify-end">
-              <PDFExport sectionName="Knowledge Engine" contentRef={knowledgeRef} />
             </div>
             </div>
+            </CardContent>
+          </Card>
           </TabsContent>
 
           {/* --- WHAT-IF ROOM --- */}
           <TabsContent value="whatif">
-            <div ref={whatifRef}>
-            <Card className="rounded-2xl shadow-sm">
+          <Card className="rounded-3xl shadow-xl border-0 bg-white/80 backdrop-blur-sm">
               <CardHeader>
-                <SectionHeader icon={FlaskConical} title="What‑If Simulation Room" desc="Run interactive shocks & visualize solvency, reserves, and premiums" />
+              <SectionHeader icon={FlaskConical} title="What‑If Simulation Room" desc="Run interactive shocks & visualize solvency, reserves, and premiums" color="purple" />
               </CardHeader>
               <CardContent>
-                <div className="grid md:grid-cols-3 gap-4">
-                  <div className="space-y-3">
-                    <Label>Market Shock</Label>
+              <div className="grid md:grid-cols-3 gap-8">
+                <div className="space-y-6">
+                  <div className="space-y-2">
+                    <Label className="text-sm font-bold text-slate-700">Market Shock</Label>
                     <Select defaultValue="fx15">
-                      <SelectTrigger><SelectValue placeholder="Select shock"/></SelectTrigger>
+                      <SelectTrigger className="rounded-xl border-2 border-slate-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-200">
+                        <SelectValue placeholder="Select shock"/>
+                      </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="fx15">FX deval −15% (USDKES)</SelectItem>
                         <SelectItem value="infl10">Inflation +10% (YoY)</SelectItem>
@@ -343,10 +495,14 @@ export default function InsuranceSLMPlatformPreview() {
                         <SelectItem value="drought1in50">Drought 1‑in‑50 event</SelectItem>
                       </SelectContent>
                     </Select>
+                  </div>
 
-                    <Label className="mt-2">Portfolio</Label>
+                  <div className="space-y-2">
+                    <Label className="text-sm font-bold text-slate-700">Portfolio</Label>
                     <Select defaultValue="motor">
-                      <SelectTrigger><SelectValue placeholder="Select portfolio"/></SelectTrigger>
+                      <SelectTrigger className="rounded-xl border-2 border-slate-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-200">
+                        <SelectValue placeholder="Select portfolio"/>
+                      </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="motor">Motor (KE)</SelectItem>
                         <SelectItem value="health">Health (UG)</SelectItem>
@@ -354,90 +510,108 @@ export default function InsuranceSLMPlatformPreview() {
                         <SelectItem value="property">Property (ZW)</SelectItem>
                       </SelectContent>
                     </Select>
-
-                    <div className="flex items-center justify-between mt-2">
-                      <Label>Monte Carlo Paths</Label>
-                      <Badge variant="outline">10,000</Badge>
                     </div>
 
-                    <Button className="w-full mt-2"><Play className="w-4 h-4 mr-2"/>Run Scenario</Button>
+                  <div className="flex items-center justify-between p-4 rounded-2xl bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-purple-200">
+                    <Label className="text-sm font-bold text-slate-700">Monte Carlo Paths</Label>
+                    <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0 px-3 py-1 rounded-full font-bold">10,000</Badge>
                   </div>
 
-                  <div className="md:col-span-2">
-                    <div className="grid grid-cols-2 gap-3 mb-3">
-                      <Kpi label="Solvency Ratio (post‑shock)" value="142%" sub=": −18% vs base" />
-                      <Kpi label="Reserve Uplift" value="+$2.7M" sub="95% VaR" />
+                  <Button className="w-full bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white border-0 rounded-xl py-3 shadow-lg">
+                    <Play className="w-5 h-5 mr-2"/>Run Scenario
+                  </Button>
+                </div>
+
+                <div className="md:col-span-2">
+                  <div className="grid grid-cols-2 gap-4 mb-6">
+                    <Kpi label="Solvency Ratio (post‑shock)" value="142%" sub=": −18% vs base" color="red" />
+                    <Kpi label="Reserve Uplift" value="+$2.7M" sub="95% VaR" color="indigo" />
                     </div>
-                    <div className="h-64">
+                  <div className="h-72 bg-white rounded-2xl border-2 border-slate-200 p-4">
                       <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={pricingBands}>
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="tier" />
-                          <YAxis />
-                          <ReTooltip />
-                          <Bar dataKey="premium" />
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                        <XAxis dataKey="tier" stroke="#64748b" />
+                        <YAxis stroke="#64748b" />
+                        <ReTooltip 
+                          contentStyle={{
+                            backgroundColor: 'white',
+                            border: '1px solid #e2e8f0',
+                            borderRadius: '12px',
+                            boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)'
+                          }}
+                        />
+                        <Bar dataKey="premium" fill="#a855f7" radius={[4, 4, 0, 0]} />
                         </BarChart>
                       </ResponsiveContainer>
                     </div>
-                    <div className="text-xs text-muted-foreground mt-2">Recommendation: uplift high‑risk tier by 8–12%; negotiate +5% reinsurance rate cap.</div>
+                  <div className="text-sm text-slate-700 mt-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-4 border border-purple-200 font-medium">
+                    💡 Recommendation: uplift high‑risk tier by 8–12%; negotiate +5% reinsurance rate cap.
+                  </div>
                   </div>
                 </div>
               </CardContent>
             </Card>
-            <div className="mt-4 flex justify-end">
-              <PDFExport sectionName="What-If Room" contentRef={whatifRef} />
-            </div>
-            </div>
           </TabsContent>
 
           {/* --- PRICING & ACTUARIAL --- */}
           <TabsContent value="pricing">
-            <div ref={pricingRef}>
-            <div className="grid lg:grid-cols-3 gap-4">
-              <Card className="lg:col-span-2 rounded-2xl shadow-sm">
+          <div className="grid lg:grid-cols-3 gap-6">
+            <Card className="lg:col-span-2 rounded-3xl shadow-xl border-0 bg-white/80 backdrop-blur-sm">
                 <CardHeader>
-                  <SectionHeader icon={Calculator} title="Dynamic Pricing Sandbox" desc="Calibrate pricing corridors with external markers" />
+                <SectionHeader icon={Calculator} title="Dynamic Pricing Sandbox" desc="Calibrate pricing corridors with external markers" color="indigo" />
                 </CardHeader>
                 <CardContent>
-                  <div className="grid md:grid-cols-3 gap-3">
-                    <div>
-                      <Label>Inflation (YoY)</Label>
-                      <Input defaultValue={8.5} type="number" step="0.1" />
+                <div className="grid md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-sm font-bold text-slate-700">Inflation (YoY)</Label>
+                    <Input defaultValue={8.5} type="number" step="0.1" className="rounded-xl border-2 border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200" />
                     </div>
-                    <div>
-                      <Label>FX Stress (%)</Label>
-                      <Input defaultValue={12} type="number" step="0.5" />
+                  <div className="space-y-2">
+                    <Label className="text-sm font-bold text-slate-700">FX Stress (%)</Label>
+                    <Input defaultValue={12} type="number" step="0.5" className="rounded-xl border-2 border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200" />
                     </div>
-                    <div>
-                      <Label>Reinsurance Rate (+bps)</Label>
-                      <Input defaultValue={75} type="number" step="5" />
-                    </div>
+                  <div className="space-y-2">
+                    <Label className="text-sm font-bold text-slate-700">Reinsurance Rate (+bps)</Label>
+                    <Input defaultValue={75} type="number" step="5" className="rounded-xl border-2 border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200" />
                   </div>
-                  <Separator className="my-3" />
-                  <div className="h-64">
+                </div>
+                <Separator className="my-6" />
+                <div className="h-72 bg-white rounded-2xl border-2 border-slate-200 p-4">
                     <ResponsiveContainer width="100%" height="100%">
                       <LineChart data={pricingBands}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="tier" />
-                        <YAxis />
-                        <ReTooltip />
-                        <Line type="monotone" dataKey="premium" />
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                      <XAxis dataKey="tier" stroke="#64748b" />
+                      <YAxis stroke="#64748b" />
+                      <ReTooltip 
+                        contentStyle={{
+                          backgroundColor: 'white',
+                          border: '1px solid #e2e8f0',
+                          borderRadius: '12px',
+                          boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)'
+                        }}
+                      />
+                      <Line type="monotone" dataKey="premium" stroke="#6366f1" strokeWidth={4} />
                       </LineChart>
                     </ResponsiveContainer>
                   </div>
-                  <div className="text-xs text-muted-foreground mt-2">Note: Corridors update with macro deltas; export to Product Canvas for rollout.</div>
+                <div className="text-sm text-slate-700 mt-4 bg-indigo-50 rounded-lg p-4 border border-indigo-200 font-medium">
+                  💡 Note: Corridors update with macro deltas; export to Product Canvas for rollout.
+                </div>
                 </CardContent>
               </Card>
 
-              <Card className="rounded-2xl shadow-sm">
+            <Card className="rounded-3xl shadow-xl border-0 bg-white/80 backdrop-blur-sm">
                 <CardHeader>
-                  <SectionHeader icon={Scale} title="Actuarial Models" desc="Configure mortality/morbidity & loss development" />
+                <SectionHeader icon={Scale} title="Actuarial Models" desc="Configure mortality/morbidity & loss development" color="cyan" />
                 </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="p-3 rounded-xl border">
-                    <div className="font-medium mb-1">Mortality Table</div>
+              <CardContent className="space-y-4">
+                <div className="p-4 rounded-2xl bg-gradient-to-r from-slate-50 to-slate-100 border-2 border-slate-200">
+                  <div className="font-bold text-slate-800 mb-2">Mortality Table</div>
                     <Select defaultValue="ifoa2020">
-                      <SelectTrigger><SelectValue placeholder="Select table"/></SelectTrigger>
+                    <SelectTrigger className="rounded-xl border-2 border-slate-200 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200">
+                      <SelectValue placeholder="Select table"/>
+                    </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="ifoa2020">IFoA 2020 Adj (KE)</SelectItem>
                         <SelectItem value="soa2015">SOA 2015 (US base)</SelectItem>
@@ -445,10 +619,12 @@ export default function InsuranceSLMPlatformPreview() {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="p-3 rounded-xl border">
-                    <div className="font-medium mb-1">Loss Development</div>
+                <div className="p-4 rounded-2xl bg-gradient-to-r from-slate-50 to-slate-100 border-2 border-slate-200">
+                  <div className="font-bold text-slate-800 mb-2">Loss Development</div>
                     <Select defaultValue="chainladder">
-                      <SelectTrigger><SelectValue placeholder="Method"/></SelectTrigger>
+                    <SelectTrigger className="rounded-xl border-2 border-slate-200 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200">
+                      <SelectValue placeholder="Method"/>
+                    </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="chainladder">Chain Ladder</SelectItem>
                         <SelectItem value="macks">Mack's Method</SelectItem>
@@ -456,29 +632,29 @@ export default function InsuranceSLMPlatformPreview() {
                       </SelectContent>
                     </Select>
                   </div>
-                  <Button variant="outline" className="w-full"><Wand2 className="w-4 h-4 mr-2"/> Recompute Reserves</Button>
+                <Button className="w-full bg-gradient-to-r from-cyan-500 to-emerald-600 hover:from-cyan-600 hover:to-emerald-700 text-white border-0 rounded-xl py-3 shadow-lg">
+                  <Wand2 className="w-4 h-4 mr-2"/> Recompute Reserves
+                </Button>
                 </CardContent>
               </Card>
-            </div>
-            <div className="mt-4 flex justify-end">
-              <PDFExport sectionName="Pricing & Actuarial" contentRef={pricingRef} />
-            </div>
             </div>
           </TabsContent>
 
           {/* --- PRODUCT CANVAS --- */}
           <TabsContent value="canvas">
-            <div ref={canvasRef}>
-            <Card className="rounded-2xl shadow-sm">
+          <Card className="rounded-3xl shadow-xl border-0 bg-white/80 backdrop-blur-sm">
               <CardHeader>
-                <SectionHeader icon={LayoutTemplate} title="Product Development Canvas" desc="Design, simulate, and package new products" />
+              <SectionHeader icon={LayoutTemplate} title="Product Development Canvas" desc="Design, simulate, and package new products" color="cyan" />
               </CardHeader>
               <CardContent>
-                <div className="grid md:grid-cols-3 gap-4">
-                  <div className="space-y-3">
-                    <Label>Product Template</Label>
+              <div className="grid md:grid-cols-3 gap-8">
+                <div className="space-y-6">
+                  <div className="space-y-2">
+                    <Label className="text-sm font-bold text-slate-700">Product Template</Label>
                     <Select defaultValue="microhealth">
-                      <SelectTrigger><SelectValue placeholder="Choose template"/></SelectTrigger>
+                      <SelectTrigger className="rounded-xl border-2 border-slate-200 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200">
+                        <SelectValue placeholder="Choose template"/>
+                      </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="microhealth">Micro‑Health (KE Low‑Income)</SelectItem>
                         <SelectItem value="motor">Motor Tiered (UG)</SelectItem>
@@ -486,157 +662,194 @@ export default function InsuranceSLMPlatformPreview() {
                         <SelectItem value="property">Property Flood (ZW urban)</SelectItem>
                       </SelectContent>
                     </Select>
+                  </div>
 
-                    <Label>Target Segment</Label>
-                    <Input defaultValue="Urban low‑income families" />
+                  <div className="space-y-2">
+                    <Label className="text-sm font-bold text-slate-700">Target Segment</Label>
+                    <Input defaultValue="Urban low‑income families" className="rounded-xl border-2 border-slate-200 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200" />
+                  </div>
 
-                    <Label>Premium Corridor (KES)</Label>
-                    <div className="flex gap-2">
-                      <Input defaultValue={6000} type="number" />
-                      <Input defaultValue={9000} type="number" />
+                  <div className="space-y-2">
+                    <Label className="text-sm font-bold text-slate-700">Premium Corridor (KES)</Label>
+                    <div className="flex gap-3">
+                      <Input defaultValue={6000} type="number" className="rounded-xl border-2 border-slate-200 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200" />
+                      <Input defaultValue={9000} type="number" className="rounded-xl border-2 border-slate-200 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200" />
+                    </div>
                     </div>
 
-                    <Button className="w-full"><Wand2 className="w-4 h-4 mr-2"/> Generate Pack</Button>
+                  <Button className="w-full bg-gradient-to-r from-cyan-500 to-emerald-600 hover:from-cyan-600 hover:to-emerald-700 text-white border-0 rounded-xl py-3 shadow-lg">
+                    <Wand2 className="w-5 h-5 mr-2"/> Generate Pack
+                  </Button>
                   </div>
 
                   <div className="md:col-span-2">
-                    <div className="grid grid-cols-2 gap-3 mb-3">
-                      <Kpi label="Projected LR" value="54%" sub="Base scenario" />
-                      <Kpi label="Uptake (12m)" value="38%" sub="Marketing index mid" />
+                  <div className="grid grid-cols-2 gap-4 mb-6">
+                    <Kpi label="Projected LR" value="54%" sub="Base scenario" color="green" />
+                    <Kpi label="Uptake (12m)" value="38%" sub="Marketing index mid" color="blue" />
                     </div>
-                    <div className="h-64">
+                  <div className="h-72 bg-white rounded-2xl border-2 border-slate-200 p-4">
                       <ResponsiveContainer width="100%" height="100%">
                         <AreaChart data={lossRatioData}>
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="month" />
-                          <YAxis tickFormatter={(v)=>`${Math.round(v*100)}%`} />
-                          <ReTooltip />
-                          <Area type="monotone" dataKey="base" />
-                          <Line type="monotone" dataKey="stressed" />
+                        <defs>
+                          <linearGradient id="canvasBase" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.3}/>
+                            <stop offset="95%" stopColor="#06b6d4" stopOpacity={0}/>
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                        <XAxis dataKey="month" stroke="#64748b" />
+                        <YAxis tickFormatter={(v)=>`${Math.round(v*100)}%`} stroke="#64748b" />
+                        <ReTooltip 
+                          contentStyle={{
+                            backgroundColor: 'white',
+                            border: '1px solid #e2e8f0',
+                            borderRadius: '12px',
+                            boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)'
+                          }}
+                        />
+                        <Area type="monotone" dataKey="base" stroke="#06b6d4" strokeWidth={3} fill="url(#canvasBase)" />
+                        <Line type="monotone" dataKey="stressed" stroke="#10b981" strokeWidth={3} strokeDasharray="5 5" />
                         </AreaChart>
                       </ResponsiveContainer>
                     </div>
-                    <div className="flex items-center justify-between mt-3">
-                      <Button variant="outline"><Layers className="w-4 h-4 mr-2"/> Compare Scenarios</Button>
-                      <Button><LayoutTemplate className="w-4 h-4 mr-2"/> Export Reg Pack (PDF)</Button>
+                  <div className="flex items-center justify-between mt-6">
+                    <Button variant="outline" className="border-2 border-slate-300 hover:border-cyan-500 hover:bg-cyan-50 rounded-xl px-6">
+                      <Layers className="w-4 h-4 mr-2"/> Compare Scenarios
+                    </Button>
+                    <Button className="bg-gradient-to-r from-cyan-500 to-emerald-600 hover:from-cyan-600 hover:to-emerald-700 text-white border-0 rounded-xl px-6 shadow-lg">
+                      <LayoutTemplate className="w-4 h-4 mr-2"/> Export Reg Pack (PDF)
+                    </Button>
                     </div>
                   </div>
                 </div>
               </CardContent>
             </Card>
-            <div className="mt-4 flex justify-end">
-              <PDFExport sectionName="Product Canvas" contentRef={canvasRef} />
-            </div>
-            </div>
           </TabsContent>
 
           {/* --- DATA & SIGNALS --- */}
           <TabsContent value="data">
-            <div ref={dataRef}>
-            <div className="grid lg:grid-cols-3 gap-4">
-              <Card className="rounded-2xl shadow-sm lg:col-span-2">
+          <div className="grid lg:grid-cols-3 gap-6">
+            <Card className="rounded-3xl shadow-xl border-0 bg-white/80 backdrop-blur-sm lg:col-span-2">
                 <CardHeader>
-                  <SectionHeader icon={Database} title="Data Ingestion" desc="Pipelines for policies, claims, journals, climate & market feeds" />
+                <SectionHeader icon={Database} title="Data Ingestion" desc="Pipelines for policies, claims, journals, climate & market feeds" color="slate" />
                 </CardHeader>
                 <CardContent>
-                  <div className="grid md:grid-cols-2 gap-3">
-                    <div className="p-3 rounded-xl border">
-                      <div className="font-medium">Claims Intake (CSV/API)</div>
-                      <Progress value={78} className="mt-2"/>
-                      <div className="text-xs text-muted-foreground mt-1">PII scrub, de‑dup, vectorize notes</div>
+                <div className="grid md:grid-cols-2 gap-4">
+                  {[
+                    { name: "Claims Intake (CSV/API)", desc: "PII scrub, de‑dup, vectorize notes", progress: 78, color: "blue" },
+                    { name: "Policy Docs (PDF)", desc: "Chunk, classify, embed, cross‑link endorsements", progress: 62, color: "green" },
+                    { name: "Regulatory Feeds", desc: "Diff ingest & auto‑citation", progress: 90, color: "purple" },
+                    { name: "Climate & Market", desc: "Rainfall, FX, inflation, reins. rates", progress: 52, color: "orange" }
+                  ].map((item, index) => (
+                    <div key={index} className="p-4 rounded-2xl bg-gradient-to-r from-slate-50 to-slate-100 border-2 border-slate-200 hover:shadow-md transition-all duration-300">
+                      <div className="font-bold text-slate-800 mb-2">{item.name}</div>
+                      <Progress value={item.progress} className="mt-2 h-3 rounded-full" />
+                      <div className="text-xs text-slate-600 mt-2 font-medium">{item.desc}</div>
                     </div>
-                    <div className="p-3 rounded-xl border">
-                      <div className="font-medium">Policy Docs (PDF)</div>
-                      <Progress value={62} className="mt-2"/>
-                      <div className="text-xs text-muted-foreground mt-1">Chunk, classify, embed, cross‑link endorsements</div>
-                    </div>
-                    <div className="p-3 rounded-xl border">
-                      <div className="font-medium">Regulatory Feeds</div>
-                      <Progress value={90} className="mt-2"/>
-                      <div className="text-xs text-muted-foreground mt-1">Diff ingest & auto‑citation</div>
-                    </div>
-                    <div className="p-3 rounded-xl border">
-                      <div className="font-medium">Climate & Market</div>
-                      <Progress value={52} className="mt-2"/>
-                      <div className="text-xs text-muted-foreground mt-1">Rainfall, FX, inflation, reins. rates</div>
-                    </div>
+                  ))}
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="rounded-2xl shadow-sm">
+            <Card className="rounded-3xl shadow-xl border-0 bg-white/80 backdrop-blur-sm">
                 <CardHeader>
-                  <SectionHeader icon={Activity} title="Model Status" desc="Deployments & evaluations" />
+                <SectionHeader icon={Activity} title="Model Status" desc="Deployments & evaluations" color="rose" />
                 </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="p-3 rounded-xl border flex items-center justify-between">
+              <CardContent className="space-y-4">
+                {[
+                  { name: "SLM‑Claims‑v0.9", desc: "F1 0.78 • Halluc. 1.2% • Refusal 0.6%", status: "Active", color: "green" },
+                  { name: "Pricing‑LoRA‑v0.4", desc: "MAPE 6.8% • Drift ↑", status: "Canary", color: "red" },
+                  { name: "IFRS17‑Compliance‑v0.3", desc: "Precision 0.91 • Coverage 87%", status: "Staging", color: "blue" }
+                ].map((model, index) => (
+                  <div key={index} className="p-4 rounded-2xl bg-gradient-to-r from-slate-50 to-slate-100 border-2 border-slate-200 flex items-center justify-between hover:shadow-md transition-all duration-300">
                     <div>
-                      <div className="font-medium">SLM‑Claims‑v0.9</div>
-                      <div className="text-xs text-muted-foreground">F1 0.78 • Halluc. 1.2% • Refusal 0.6%</div>
+                      <div className="font-bold text-slate-800">{model.name}</div>
+                      <div className="text-xs text-slate-600 font-medium">{model.desc}</div>
                     </div>
-                    <Badge>Active</Badge>
+                    <Badge className={`${
+                      model.color === 'green' ? 'bg-gradient-to-r from-emerald-500 to-teal-500' :
+                      model.color === 'red' ? 'bg-gradient-to-r from-red-500 to-pink-500' :
+                      'bg-gradient-to-r from-blue-500 to-indigo-500'
+                    } text-white border-0 px-3 py-1 rounded-full font-bold`}>
+                      {model.status}
+                    </Badge>
                   </div>
-                  <div className="p-3 rounded-xl border flex items-center justify-between">
-                    <div>
-                      <div className="font-medium">Pricing‑LoRA‑v0.4</div>
-                      <div className="text-xs text-muted-foreground">MAPE 6.8% • Drift ↑</div>
-                    </div>
-                    <Badge variant="destructive">Canary</Badge>
-                  </div>
-                  <div className="p-3 rounded-xl border flex items-center justify-between">
-                    <div>
-                      <div className="font-medium">IFRS17‑Compliance‑v0.3</div>
-                      <div className="text-xs text-muted-foreground">Precision 0.91 • Coverage 87%</div>
-                    </div>
-                    <Badge variant="outline">Staging</Badge>
-                  </div>
+                ))}
                 </CardContent>
               </Card>
-            </div>
-            <div className="mt-4 flex justify-end">
-              <PDFExport sectionName="Data & Signals" contentRef={dataRef} />
-            </div>
             </div>
           </TabsContent>
 
           {/* --- GOVERNANCE --- */}
           <TabsContent value="governance">
-            <div ref={governanceRef}>
-            <Card className="rounded-2xl shadow-sm">
+          <Card className="rounded-3xl shadow-xl border-0 bg-white/80 backdrop-blur-sm">
               <CardHeader>
-                <SectionHeader icon={ShieldCheck} title="Governance & Compliance" desc="RBAC, audit trails, safety policies, data residency" />
+              <SectionHeader icon={ShieldCheck} title="Governance & Compliance" desc="RBAC, audit trails, safety policies, data residency" color="rose" />
               </CardHeader>
               <CardContent>
-                <div className="grid md:grid-cols-3 gap-4">
-                  <div className="p-3 rounded-xl border">
-                    <div className="font-medium">Roles & Access</div>
-                    <div className="text-xs text-muted-foreground">Claims, Actuary, Exec, Regulator</div>
-                    <Button size="sm" variant="outline" className="mt-2"><Lock className="w-4 h-4 mr-2"/> Manage</Button>
+              <div className="grid md:grid-cols-3 gap-6">
+                {[
+                  { 
+                    title: "Roles & Access", 
+                    desc: "Claims, Actuary, Exec, Regulator", 
+                    icon: Lock, 
+                    color: "blue",
+                    buttonText: "Manage"
+                  },
+                  { 
+                    title: "Data Residency", 
+                    desc: "KE | UG | ZM | ZW", 
+                    icon: Database, 
+                    color: "green",
+                    buttonText: "Configure"
+                  },
+                  { 
+                    title: "Safety Policies", 
+                    desc: "Prompt filters • PII redaction • Audit logs", 
+                    icon: ShieldCheck, 
+                    color: "purple",
+                    buttonText: "Review"
+                  }
+                ].map((item, index) => (
+                  <div key={index} className="p-6 rounded-2xl bg-gradient-to-br from-slate-50 to-slate-100 border-2 border-slate-200 hover:shadow-lg transition-all duration-300">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className={`p-3 rounded-xl bg-gradient-to-br ${
+                        item.color === 'blue' ? 'from-blue-500 to-blue-600' :
+                        item.color === 'green' ? 'from-emerald-500 to-emerald-600' :
+                        'from-purple-500 to-purple-600'
+                      } text-white`}>
+                        <item.icon className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <div className="font-bold text-slate-800 text-lg">{item.title}</div>
+                        <div className="text-sm text-slate-600 font-medium">{item.desc}</div>
                   </div>
-                  <div className="p-3 rounded-xl border">
-                    <div className="font-medium">Data Residency</div>
-                    <div className="text-xs text-muted-foreground">KE | UG | ZM | ZW</div>
-                    <Button size="sm" variant="outline" className="mt-2"><Database className="w-4 h-4 mr-2"/> Configure</Button>
                   </div>
-                  <div className="p-3 rounded-xl border">
-                    <div className="font-medium">Safety Policies</div>
-                    <div className="text-xs text-muted-foreground">Prompt filters • PII redaction • Audit logs</div>
-                    <Button size="sm" variant="outline" className="mt-2"><ShieldCheck className="w-4 h-4 mr-2"/> Review</Button>
+                    <Button className={`w-full bg-gradient-to-r ${
+                      item.color === 'blue' ? 'from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700' :
+                      item.color === 'green' ? 'from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700' :
+                      'from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700'
+                    } text-white border-0 rounded-xl py-3 shadow-lg`}>
+                      <item.icon className="w-4 h-4 mr-2"/> {item.buttonText}
+                    </Button>
                   </div>
+                ))}
                 </div>
               </CardContent>
             </Card>
-            <div className="mt-4 flex justify-end">
-              <PDFExport sectionName="Governance" contentRef={governanceRef} />
-            </div>
-            </div>
           </TabsContent>
-        </Tabs>
+          </Tabs>
+        </div>
 
-        <footer className="mt-6 text-center text-xs text-muted-foreground">
-          © {new Date().getFullYear()} Insurance SLM Platform • Demo UI for design & stakeholder alignment
+        <footer className="mt-12 text-center">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="bg-white/60 backdrop-blur-sm rounded-2xl border border-gray-200/50 p-6 shadow-lg">
+              <p className="text-sm text-gray-600 font-medium">
+                © {new Date().getFullYear()} Insurance SLM Platform • Demo UI for design & stakeholder alignment
+              </p>
+            </div>
+          </div>
         </footer>
-      </div>
-    </TooltipProvider>
+    </div>
   );
 }

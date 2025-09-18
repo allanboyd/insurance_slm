@@ -80,10 +80,11 @@ export const SimpleCompletePDFExport: React.FC = () => {
         variant="default" 
         size="sm"
         disabled={isExporting}
-        className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
+        className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-xs lg:text-sm"
       >
-        <FileText className="w-4 h-4 mr-2" />
-        {isExporting ? 'Exporting...' : 'Export Complete Report as PDF'}
+        <FileText className="w-3 h-3 lg:w-4 lg:h-4 mr-1 lg:mr-2" />
+        <span className="hidden sm:inline">{isExporting ? 'Exporting...' : 'Export Complete Report as PDF'}</span>
+        <span className="sm:hidden">{isExporting ? 'Exporting...' : 'Export All'}</span>
       </Button>
     </>
   );
