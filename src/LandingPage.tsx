@@ -523,13 +523,13 @@ const LandingPage = ({ onEnterDashboard }: { onEnterDashboard: () => void }) => 
       </section>
 
       {/* How It Works Section */}
-      <section className="py-20 bg-white">
+      <section className="py-20 bg-gradient-to-br from-gray-50 to-cyan-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div 
             initial={{ opacity: 0, y: 50 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
-            className="grid lg:grid-cols-2 gap-12 items-center"
+            className="grid lg:grid-cols-2 gap-16 items-start"
           >
             {/* Left Section - Content */}
             <motion.div 
@@ -539,7 +539,7 @@ const LandingPage = ({ onEnterDashboard }: { onEnterDashboard: () => void }) => 
               className="space-y-8"
             >
               <div>
-                <div className="text-orange-500 text-sm font-bold uppercase tracking-wider mb-4">
+                <div className="text-cyan-600 text-sm font-bold uppercase tracking-wider mb-4">
                   Insurance AI SLM Platform
                 </div>
                 <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 leading-tight mb-6">
@@ -551,7 +551,7 @@ const LandingPage = ({ onEnterDashboard }: { onEnterDashboard: () => void }) => 
                 </p>
                 <Button 
                   onClick={onEnterDashboard}
-                  className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-8 py-4 text-lg font-semibold rounded-xl shadow-lg"
+                  className="bg-gradient-to-r from-cyan-500 to-teal-600 hover:from-cyan-600 hover:to-teal-700 text-white px-8 py-4 text-lg font-semibold rounded-xl shadow-lg"
                 >
                   View Live Demo
                 </Button>
@@ -565,91 +565,118 @@ const LandingPage = ({ onEnterDashboard }: { onEnterDashboard: () => void }) => 
               transition={{ duration: 0.8 }}
               className="relative"
             >
-              {/* Background Numbers */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="text-9xl font-bold text-gray-100 select-none">1</div>
-              </div>
-              <div className="absolute top-1/4 right-1/4">
-                <div className="text-8xl font-bold text-gray-100 select-none">2</div>
-              </div>
-              <div className="absolute top-0 right-0">
-                <div className="text-7xl font-bold text-gray-100 select-none">3</div>
-              </div>
+              {/* Process Steps Container */}
+              <div className="bg-white rounded-3xl shadow-2xl p-8 relative overflow-hidden">
+                {/* Background Pattern */}
+                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-cyan-100 to-teal-100 rounded-full -translate-y-16 translate-x-16"></div>
+                <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-br from-orange-100 to-orange-200 rounded-full translate-y-12 -translate-x-12"></div>
+                
+                <div className="relative space-y-8">
+                  {/* Animated Dotted Line */}
+                  <div className="absolute left-6 top-6 bottom-0 w-0.5">
+                    <motion.div
+                      className="w-full h-full bg-gradient-to-b from-cyan-500 via-orange-500 to-teal-500"
+                      style={{
+                        background: 'linear-gradient(to bottom, #06b6d4, #f97316, #14b8a6)',
+                        backgroundSize: '100% 200%',
+                        backgroundPosition: '0% 0%',
+                      }}
+                      animate={{
+                        backgroundPosition: ['0% 0%', '0% 100%', '0% 0%'],
+                      }}
+                      transition={{
+                        duration: 3,
+                        repeat: Infinity,
+                        ease: 'easeInOut',
+                      }}
+                    />
+                    {/* Dotted overlay */}
+                    <div 
+                      className="absolute inset-0 opacity-30"
+                      style={{
+                        backgroundImage: 'radial-gradient(circle, #000 1px, transparent 1px)',
+                        backgroundSize: '4px 8px',
+                        backgroundRepeat: 'repeat-y',
+                      }}
+                    />
+                  </div>
 
-              {/* Process Steps */}
-              <div className="relative space-y-16">
-                {/* Step 1 - Data Input */}
-                <motion.div 
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.8, delay: 0.2 }}
-                  className="relative"
-                >
-                  <div className="flex items-start space-x-6">
-                    <div className="w-6 h-6 bg-orange-500 rounded-full flex-shrink-0 mt-2 shadow-lg"></div>
+                  {/* Step 1 - Data Input */}
+                  <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8, delay: 0.2 }}
+                    className="flex items-start space-x-6 group relative z-10"
+                  >
+                    <div className="flex-shrink-0">
+                      <motion.div 
+                        className="w-12 h-12 bg-gradient-to-br from-cyan-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        <span className="text-white font-bold text-lg">1</span>
+                      </motion.div>
+                    </div>
                     <div className="space-y-3">
                       <h3 className="text-xl font-bold text-gray-900">Data Input</h3>
                       <p className="text-gray-600 leading-relaxed">
                         Policy/claims data + regulator circulars + climate/FX data normalized + PII-safe processing
                       </p>
                     </div>
-                  </div>
-                </motion.div>
+                  </motion.div>
 
-                {/* Step 2 - AI Processing */}
-                <motion.div 
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.8, delay: 0.4 }}
-                  className="relative"
-                >
-                  <div className="flex items-start space-x-6">
-                    <div className="w-6 h-6 bg-orange-500 rounded-full flex-shrink-0 mt-2 shadow-lg"></div>
+                  {/* Step 2 - AI Processing */}
+                  <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8, delay: 0.4 }}
+                    className="flex items-start space-x-6 group relative z-10"
+                  >
+                    <div className="flex-shrink-0">
+                      <motion.div 
+                        className="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        <span className="text-white font-bold text-lg">2</span>
+                      </motion.div>
+                    </div>
                     <div className="space-y-3">
                       <h3 className="text-xl font-bold text-gray-900">AI Processing</h3>
                       <p className="text-gray-600 leading-relaxed">
                         SLM + RAG for day-to-day work; LoRA refresh weekly for domain changes
                       </p>
                     </div>
-                  </div>
-                </motion.div>
+                  </motion.div>
 
-                {/* Step 3 - Output Generation */}
-                <motion.div 
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.8, delay: 0.6 }}
-                  className="relative"
-                >
-                  <div className="flex items-start space-x-6">
-                    <div className="w-6 h-6 bg-orange-500 rounded-full flex-shrink-0 mt-2 shadow-lg"></div>
+                  {/* Step 3 - Output Generation */}
+                  <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8, delay: 0.6 }}
+                    className="flex items-start space-x-6 group relative z-10"
+                  >
+                    <div className="flex-shrink-0">
+                      <motion.div 
+                        className="w-12 h-12 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-2xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        <span className="text-white font-bold text-lg">3</span>
+                      </motion.div>
+                    </div>
                     <div className="space-y-3">
                       <h3 className="text-xl font-bold text-gray-900">Output Generation</h3>
                       <p className="text-gray-600 leading-relaxed">
                         Decisions with citations, filing packs, pricing corridors, treaty memos, dashboards
                       </p>
                     </div>
-                  </div>
-                </motion.div>
+                  </motion.div>
+                </div>
               </div>
-
-              {/* Curved Timeline */}
-              <svg 
-                className="absolute inset-0 w-full h-full pointer-events-none" 
-                viewBox="0 0 400 300"
-                preserveAspectRatio="none"
-              >
-                <path
-                  d="M 50 250 Q 200 100 350 50"
-                  stroke="#f97316"
-                  strokeWidth="3"
-                  fill="none"
-                  strokeDasharray="5,5"
-                />
-              </svg>
             </motion.div>
           </motion.div>
-
+         
           {/* Customer Simulator Section */}
           <motion.div 
             initial={{ opacity: 0, y: 50 }}
