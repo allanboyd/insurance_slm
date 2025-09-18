@@ -187,19 +187,10 @@ const LandingPage = ({ onEnterDashboard }: { onEnterDashboard: () => void }) => 
               transition={{ duration: 0.8 }}
               className="space-y-8"
             >
-              <div className="flex items-center space-x-2">
-                <div className="flex">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="w-5 h-5 text-yellow-400 fill-current" />
-                  ))}
-                </div>
-                <span className="text-gray-600 font-medium">5.0 Star (1.5K+ Reviews)</span>
-              </div>
 
               <h1 className="text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
                 Because Insurance Is 
                 <span className="bg-gradient-to-r from-cyan-600 to-teal-600 bg-clip-text text-transparent"> Complicated Enough</span>
-                <span className="text-orange-500 ml-2">🔥</span>
               </h1>
 
               <p className="text-xl text-gray-600 leading-relaxed">
@@ -396,17 +387,12 @@ const LandingPage = ({ onEnterDashboard }: { onEnterDashboard: () => void }) => 
                 transition={{ duration: 0.8, delay: index * 0.1 }}
                 className="text-center group hover:scale-105 transition-transform duration-300"
               >
-                <div className="relative">
-                  <div className={`w-20 h-20 mx-auto mb-4 rounded-2xl bg-gradient-to-br ${
-                    item.color === 'cyan' ? 'from-cyan-500 to-teal-600' :
-                    item.color === 'orange' ? 'from-orange-500 to-orange-600' :
-                    'from-teal-500 to-cyan-600'
-                  } flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow`}>
-                    <item.icon className="w-10 h-10 text-white" />
-                  </div>
-                  <div className="absolute -top-2 -right-2 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-md">
-                    <span className="text-lg">{item.visual}</span>
-                  </div>
+                <div className={`w-20 h-20 mx-auto mb-4 rounded-2xl bg-gradient-to-br ${
+                  item.color === 'cyan' ? 'from-cyan-500 to-teal-600' :
+                  item.color === 'orange' ? 'from-orange-500 to-orange-600' :
+                  'from-teal-500 to-cyan-600'
+                } flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow`}>
+                  <item.icon className="w-10 h-10 text-white" />
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">{item.title}</h3>
                 <p className="text-gray-600 mb-2">{item.desc}</p>
@@ -498,15 +484,12 @@ const LandingPage = ({ onEnterDashboard }: { onEnterDashboard: () => void }) => 
               >
                 <Card className="h-full hover:shadow-xl transition-all duration-300 border-0 bg-white/80 backdrop-blur-sm group-hover:scale-105">
                   <CardHeader>
-                    <div className="flex items-center justify-between mb-4">
-                      <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${
-                        product.color === 'cyan' ? 'from-cyan-500 to-teal-600' :
-                        product.color === 'orange' ? 'from-orange-500 to-orange-600' :
-                        'from-teal-500 to-cyan-600'
-                      } flex items-center justify-center shadow-lg`}>
-                        <product.icon className="w-7 h-7 text-white" />
-                      </div>
-                      <div className="text-3xl">{product.visual}</div>
+                    <div className={`w-16 h-16 rounded-xl bg-gradient-to-br ${
+                      product.color === 'cyan' ? 'from-cyan-500 to-teal-600' :
+                      product.color === 'orange' ? 'from-orange-500 to-orange-600' :
+                      'from-teal-500 to-cyan-600'
+                    } flex items-center justify-center shadow-lg mb-4`}>
+                      <product.icon className="w-8 h-8 text-white" />
                     </div>
                     <CardTitle className="text-xl font-bold text-gray-900 mb-2">{product.title}</CardTitle>
                     <CardDescription className="text-gray-600 leading-relaxed mb-4">
@@ -536,6 +519,213 @@ const LandingPage = ({ onEnterDashboard }: { onEnterDashboard: () => void }) => 
               </motion.div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* How It Works Section */}
+      <section className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div 
+            initial={{ opacity: 0, y: 50 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="grid lg:grid-cols-2 gap-12 items-center"
+          >
+            {/* Left Section - Content */}
+            <motion.div 
+              initial={{ opacity: 0, x: -50 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8 }}
+              className="space-y-8"
+            >
+              <div>
+                <div className="text-orange-500 text-sm font-bold uppercase tracking-wider mb-4">
+                  Insurance AI SLM Platform
+                </div>
+                <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 leading-tight mb-6">
+                  How It Works
+                </h2>
+                <p className="text-lg text-gray-600 leading-relaxed mb-8">
+                  Our AI-powered platform processes insurance data through advanced machine learning 
+                  to deliver real-time insights, dynamic pricing, and intelligent decision support.
+                </p>
+                <Button 
+                  onClick={onEnterDashboard}
+                  className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-8 py-4 text-lg font-semibold rounded-xl shadow-lg"
+                >
+                  View Live Demo
+                </Button>
+              </div>
+            </motion.div>
+
+            {/* Right Section - Process Flow */}
+            <motion.div 
+              initial={{ opacity: 0, x: 50 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8 }}
+              className="relative"
+            >
+              {/* Background Numbers */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="text-9xl font-bold text-gray-100 select-none">1</div>
+              </div>
+              <div className="absolute top-1/4 right-1/4">
+                <div className="text-8xl font-bold text-gray-100 select-none">2</div>
+              </div>
+              <div className="absolute top-0 right-0">
+                <div className="text-7xl font-bold text-gray-100 select-none">3</div>
+              </div>
+
+              {/* Process Steps */}
+              <div className="relative space-y-16">
+                {/* Step 1 - Data Input */}
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8, delay: 0.2 }}
+                  className="relative"
+                >
+                  <div className="flex items-start space-x-6">
+                    <div className="w-6 h-6 bg-orange-500 rounded-full flex-shrink-0 mt-2 shadow-lg"></div>
+                    <div className="space-y-3">
+                      <h3 className="text-xl font-bold text-gray-900">Data Input</h3>
+                      <p className="text-gray-600 leading-relaxed">
+                        Policy/claims data + regulator circulars + climate/FX data normalized + PII-safe processing
+                      </p>
+                    </div>
+                  </div>
+                </motion.div>
+
+                {/* Step 2 - AI Processing */}
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8, delay: 0.4 }}
+                  className="relative"
+                >
+                  <div className="flex items-start space-x-6">
+                    <div className="w-6 h-6 bg-orange-500 rounded-full flex-shrink-0 mt-2 shadow-lg"></div>
+                    <div className="space-y-3">
+                      <h3 className="text-xl font-bold text-gray-900">AI Processing</h3>
+                      <p className="text-gray-600 leading-relaxed">
+                        SLM + RAG for day-to-day work; LoRA refresh weekly for domain changes
+                      </p>
+                    </div>
+                  </div>
+                </motion.div>
+
+                {/* Step 3 - Output Generation */}
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8, delay: 0.6 }}
+                  className="relative"
+                >
+                  <div className="flex items-start space-x-6">
+                    <div className="w-6 h-6 bg-orange-500 rounded-full flex-shrink-0 mt-2 shadow-lg"></div>
+                    <div className="space-y-3">
+                      <h3 className="text-xl font-bold text-gray-900">Output Generation</h3>
+                      <p className="text-gray-600 leading-relaxed">
+                        Decisions with citations, filing packs, pricing corridors, treaty memos, dashboards
+                      </p>
+                    </div>
+                  </div>
+                </motion.div>
+              </div>
+
+              {/* Curved Timeline */}
+              <svg 
+                className="absolute inset-0 w-full h-full pointer-events-none" 
+                viewBox="0 0 400 300"
+                preserveAspectRatio="none"
+              >
+                <path
+                  d="M 50 250 Q 200 100 350 50"
+                  stroke="#f97316"
+                  strokeWidth="3"
+                  fill="none"
+                  strokeDasharray="5,5"
+                />
+              </svg>
+            </motion.div>
+          </motion.div>
+
+          {/* Customer Simulator Section */}
+          <motion.div 
+            initial={{ opacity: 0, y: 50 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="mt-20"
+          >
+            <div className="bg-gradient-to-br from-cyan-50 to-orange-50 rounded-3xl p-8 lg:p-12">
+              <div className="text-center mb-12">
+                <h3 className="text-3xl font-bold text-gray-900 mb-4">Customer Facing Simulator</h3>
+                <p className="text-lg text-gray-600 max-w-4xl mx-auto">
+                  This feature allows customers to simulate their insurance premiums, understanding where they stand. 
+                  It's also a strong acquisition and distribution tool for insurance companies as well as a data 
+                  collection and continued intelligence tool for product development.
+                </p>
+              </div>
+
+              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+                {/* Inputs */}
+                <div className="text-center">
+                  <div className="w-16 h-16 bg-gradient-to-br from-cyan-500 to-teal-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+                    <Database className="w-8 h-8 text-white" />
+                  </div>
+                  <h4 className="text-lg font-bold text-gray-900 mb-2">Inputs</h4>
+                  <ul className="text-sm text-gray-600 space-y-1">
+                    <li>Coverage type</li>
+                    <li>Country</li>
+                    <li>Household size</li>
+                    <li>Deductible</li>
+                    <li>Coverage limits</li>
+                  </ul>
+                </div>
+
+                {/* Real-time Processing */}
+                <div className="text-center">
+                  <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+                    <Zap className="w-8 h-8 text-white" />
+                  </div>
+                  <h4 className="text-lg font-bold text-gray-900 mb-2">Real-time Processing</h4>
+                  <ul className="text-sm text-gray-600 space-y-1">
+                    <li>Premium estimate</li>
+                    <li>Risk score calculation</li>
+                    <li>Instant results</li>
+                  </ul>
+                </div>
+
+                {/* Conversion CTAs */}
+                <div className="text-center">
+                  <div className="w-16 h-16 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+                    <Target className="w-8 h-8 text-white" />
+                  </div>
+                  <h4 className="text-lg font-bold text-gray-900 mb-2">Conversion CTAs</h4>
+                  <ul className="text-sm text-gray-600 space-y-1">
+                    <li>Get Quote</li>
+                    <li>Chat with Advisor</li>
+                    <li>Continue in WhatsApp</li>
+                    <li>Share Scenario Link</li>
+                  </ul>
+                </div>
+
+                {/* White-label Features */}
+                <div className="text-center">
+                  <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+                    <Settings className="w-8 h-8 text-white" />
+                  </div>
+                  <h4 className="text-lg font-bold text-gray-900 mb-2">White-label Features</h4>
+                  <ul className="text-sm text-gray-600 space-y-1">
+                    <li>Fully configurable</li>
+                    <li>Custom branding</li>
+                    <li>Insurer-specific rules</li>
+                    <li>Custom integrations</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </motion.div>
         </div>
       </section>
 
@@ -729,15 +919,12 @@ const LandingPage = ({ onEnterDashboard }: { onEnterDashboard: () => void }) => 
                     </div>
                   )}
                   <CardHeader className="text-center pb-8">
-                    <div className="flex items-center justify-center mb-4">
-                      <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${
-                        plan.color === 'cyan' ? 'from-cyan-500 to-teal-600' :
-                        plan.color === 'orange' ? 'from-orange-500 to-orange-600' :
-                        'from-teal-500 to-cyan-600'
-                      } flex items-center justify-center shadow-lg`}>
-                        <plan.icon className="w-8 h-8 text-white" />
-                      </div>
-                      <div className="ml-4 text-4xl">{plan.visual}</div>
+                    <div className={`w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br ${
+                      plan.color === 'cyan' ? 'from-cyan-500 to-teal-600' :
+                      plan.color === 'orange' ? 'from-orange-500 to-orange-600' :
+                      'from-teal-500 to-cyan-600'
+                    } flex items-center justify-center shadow-lg`}>
+                      <plan.icon className="w-8 h-8 text-white" />
                     </div>
                     <CardTitle className="text-2xl font-bold text-gray-900">{plan.name}</CardTitle>
                     <div className="mt-4">

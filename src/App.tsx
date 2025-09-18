@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   Card,
@@ -136,6 +136,7 @@ const SectionHeader = ({ icon: Icon, title, desc, color = "blue" }: { icon: any;
 // --- Main Preview Component ---
 export default function InsuranceSLMPlatformPreview() {
   const [showDashboard, setShowDashboard] = useState<boolean>(false);
+  const [isScrolled, setIsScrolled] = useState<boolean>(false);
   const [chat, setChat] = useState<string>("");
   const [messages, setMessages] = useState<Array<{ role: "user" | "assistant"; content: string }>>([
     { role: "assistant", content: "Hi! I'm your Insurance Knowledge Engine. Ask about policies, pricing bands, IFRS17, or run a scenario." },
@@ -154,35 +155,74 @@ export default function InsuranceSLMPlatformPreview() {
     setShowDashboard(true);
   };
 
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollTop = window.scrollY;
+      setIsScrolled(scrollTop > 50);
+    };
+
+    if (showDashboard) {
+      window.addEventListener('scroll', handleScroll);
+    }
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, [showDashboard]);
+
   if (!showDashboard) {
     return <LandingPage onEnterDashboard={handleEnterDashboard} />;
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-teal-50 to-orange-50">
+    <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-teal-50 to-orange-50 relative overflow-hidden">
+      {/* Background Pattern */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(6,182,212,0.1),transparent_50%)]"></div>
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(249,115,22,0.1),transparent_50%)]"></div>
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_80%,rgba(20,184,166,0.1),transparent_50%)]"></div>
         {/* Header */}
-      <motion.header initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="bg-white/80 backdrop-blur-sm border-b border-gray-200/50 shadow-lg">
+      <motion.header 
+        initial={{ opacity: 0, y: -8 }} 
+        animate={{ opacity: 1, y: 0 }} 
+        transition={{ duration: 0.4 }} 
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+          isScrolled
+            ? 'bg-white/95 backdrop-blur-md shadow-lg border-b border-gray-200' 
+            : 'bg-gradient-to-r from-cyan-400/20 via-teal-300/15 to-cyan-200/10 backdrop-blur-sm'
+        }`}
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="p-3 rounded-2xl bg-gradient-to-br from-cyan-500 to-teal-600 shadow-lg">
-                <Brain className="w-8 h-8 text-white" />
+              <div className="p-4 rounded-2xl bg-gradient-to-br from-cyan-500 to-teal-600 shadow-xl">
+                <Brain className="w-9 h-9 text-white" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold bg-gradient-to-r from-cyan-600 to-teal-600 bg-clip-text text-transparent">
+                <h1 className={`text-3xl font-bold transition-colors duration-300 ${
+                  isScrolled
+                    ? 'bg-gradient-to-r from-cyan-600 to-teal-600 bg-clip-text text-transparent' 
+                    : 'text-gray-900'
+                }`}>
                   Insurance SLM Platform
                 </h1>
-                <p className="text-gray-600 font-medium">AI-Powered Insurance Intelligence</p>
+                <p className={`font-medium transition-colors duration-300 ${
+                  isScrolled ? 'text-gray-600' : 'text-gray-700'
+                }`}>
+                  AI-Powered Insurance Intelligence
+                </p>
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <Badge className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-4 py-2 text-sm font-semibold shadow-lg">
+              <Badge className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 text-sm font-semibold shadow-xl rounded-xl">
                 Live Analysis
               </Badge>
               <Button 
                 onClick={() => setShowDashboard(false)}
-                variant="outline"
-                className="border-2 border-cyan-500 text-cyan-600 hover:bg-cyan-50 px-4 py-2"
+                className={`px-6 py-3 transition-all duration-300 rounded-xl font-medium ${
+                  isScrolled 
+                    ? 'bg-cyan-600 hover:bg-cyan-700 text-white' 
+                    : 'bg-cyan-600 hover:bg-cyan-700 text-white shadow-xl'
+                }`}
               >
                 Back to Home
               </Button>
@@ -191,17 +231,17 @@ export default function InsuranceSLMPlatformPreview() {
         </div>
       </motion.header>
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-32">
           <Tabs defaultValue="dashboard" className="">
-            <TabsList className="grid grid-cols-8 w-full mb-8 bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-2xl p-1 shadow-lg">
-              <TabsTrigger value="dashboard" className="rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-teal-600 data-[state=active]:text-white data-[state=active]:shadow-md">Dashboard</TabsTrigger>
-              <TabsTrigger value="knowledge" className="rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-orange-600 data-[state=active]:text-white data-[state=active]:shadow-md">Knowledge Engine</TabsTrigger>
-              <TabsTrigger value="simulator" className="rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-teal-500 data-[state=active]:to-cyan-600 data-[state=active]:text-white data-[state=active]:shadow-md">Customer Simulator</TabsTrigger>
-              <TabsTrigger value="whatif" className="rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-orange-600 data-[state=active]:text-white data-[state=active]:shadow-md">What‑If Room</TabsTrigger>
-              <TabsTrigger value="pricing" className="rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-teal-600 data-[state=active]:text-white data-[state=active]:shadow-md">Pricing & Actuarial</TabsTrigger>
-              <TabsTrigger value="canvas" className="rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-teal-500 data-[state=active]:to-cyan-600 data-[state=active]:text-white data-[state=active]:shadow-md">Product Canvas</TabsTrigger>
-              <TabsTrigger value="data" className="rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-orange-600 data-[state=active]:text-white data-[state=active]:shadow-md">Data & Signals</TabsTrigger>
-              <TabsTrigger value="governance" className="rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-teal-600 data-[state=active]:text-white data-[state=active]:shadow-md">Governance</TabsTrigger>
+            <TabsList className="grid grid-cols-8 w-full mb-10 bg-white shadow-xl border border-gray-200/30 rounded-2xl p-1">
+              <TabsTrigger value="dashboard" className="rounded-xl text-gray-700 hover:text-gray-900 hover:bg-gray-50 data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-teal-600 data-[state=active]:text-white data-[state=active]:shadow-lg font-medium transition-all duration-200">Dashboard</TabsTrigger>
+              <TabsTrigger value="knowledge" className="rounded-xl text-gray-700 hover:text-gray-900 hover:bg-gray-50 data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-orange-600 data-[state=active]:text-white data-[state=active]:shadow-lg font-medium transition-all duration-200">Knowledge Engine</TabsTrigger>
+              <TabsTrigger value="simulator" className="rounded-xl text-gray-700 hover:text-gray-900 hover:bg-gray-50 data-[state=active]:bg-gradient-to-r data-[state=active]:from-teal-500 data-[state=active]:to-cyan-600 data-[state=active]:text-white data-[state=active]:shadow-lg font-medium transition-all duration-200">Customer Simulator</TabsTrigger>
+              <TabsTrigger value="whatif" className="rounded-xl text-gray-700 hover:text-gray-900 hover:bg-gray-50 data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-orange-600 data-[state=active]:text-white data-[state=active]:shadow-lg font-medium transition-all duration-200">What‑If Room</TabsTrigger>
+              <TabsTrigger value="pricing" className="rounded-xl text-gray-700 hover:text-gray-900 hover:bg-gray-50 data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-teal-600 data-[state=active]:text-white data-[state=active]:shadow-lg font-medium transition-all duration-200">Pricing & Actuarial</TabsTrigger>
+              <TabsTrigger value="canvas" className="rounded-xl text-gray-700 hover:text-gray-900 hover:bg-gray-50 data-[state=active]:bg-gradient-to-r data-[state=active]:from-teal-500 data-[state=active]:to-cyan-600 data-[state=active]:text-white data-[state=active]:shadow-lg font-medium transition-all duration-200">Product Canvas</TabsTrigger>
+              <TabsTrigger value="data" className="rounded-xl text-gray-700 hover:text-gray-900 hover:bg-gray-50 data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-orange-600 data-[state=active]:text-white data-[state=active]:shadow-lg font-medium transition-all duration-200">Data & Signals</TabsTrigger>
+              <TabsTrigger value="governance" className="rounded-xl text-gray-700 hover:text-gray-900 hover:bg-gray-50 data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-teal-600 data-[state=active]:text-white data-[state=active]:shadow-lg font-medium transition-all duration-200">Governance</TabsTrigger>
             </TabsList>
 
             {/* --- DASHBOARD --- */}
